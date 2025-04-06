@@ -88,6 +88,46 @@ GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
    nvidia-container-toolkit --version
    ```
 
+## Step 4: Configure Podman Hook (Required for GPU Access)
+
+1. Create the hook directory:
+   ```
+   sudo mkdir -p /usr/share/containers/oci/hooks.d
+   ```
+
+2. Create the hook config file:
+   ```
+   sudo tee /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json > /dev/null <<'EOF'
+   {
+     "version": "1.0.0",
+     "hook": {
+       "path": "/usr/bin/nvidia-container-toolkit",
+       "args": ["nvidia-container-toolkit", "prestart"],
+       "env": [
+         "NVIDIA_REQUIRE_CUDA=cuda>=11.0"
+       ]
+     },
+     "when": {
+       "always": true
+     },
+     "stages": ["prestart"]
+   }
+   EOF
+   ```
+
+3. (Optional but recommended) Symlink it to /etc/containers/oci/hooks.d so it works for both root and rootless Podman:
+   ```
+   sudo mkdir -p /etc/containers/oci/hooks.d
+   sudo ln -s /usr/share/containers/oci/hooks.d/oci-nvidia-hook.json /etc/containers/oci/hooks.d/
+   ```
+
+4. Test the setup with:
+   ```
+   podman run --rm \
+     --hooks-dir=/usr/share/containers/oci/hooks.d \
+     docker.io/nvidia/cuda:12.3.2-base-ubi9 nvidia-smi
+   ```
+
 ## GPG Key Verification Notes
 
 - **gpgcheck=1**: Enables package signature verification for security
@@ -98,7 +138,7 @@ GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
 ## Repository Configuration Notes
 
 - **obsolete=0**: Prevents automatic package obsoletion, ensuring stable offline operation
-- **baseurl**: Uses /var/nvidia-packages for persistent storage (better than /tmp)
+- **baseurl**: Uses /var/nvidia-packages for persistent storage
 - All paths must match the actual location on your system
 
 ## Troubleshooting
@@ -114,6 +154,11 @@ GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
 - Verify repository metadata:
   ```
   ls -l /var/nvidia-packages/repodata/
+  ```
+- If Podman hook doesn't work:
+  ```
+  sudo nvidia-container-toolkit --version
+  ls -l /usr/share/containers/oci/hooks.d/
   ```
 
 ## Maintenance
