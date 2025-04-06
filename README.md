@@ -2,6 +2,8 @@
 
 This guide provides step-by-step instructions to set up a local repository and install the NVIDIA Container Toolkit on a RHEL 9.5 server without internet access.
 
+GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
+
 ## Prerequisites
 
 - **Downloaded Packages**: Ensure all necessary RPM packages for the NVIDIA Container Toolkit are present in the `./repo` directory of this repository.
@@ -13,7 +15,8 @@ This guide provides step-by-step instructions to set up a local repository and i
   name=Local NVIDIA Container Toolkit Repo
   baseurl=file:///tmp/nvidia-packages
   enabled=1
-  gpgcheck=0
+  gpgcheck=1
+  gpgkey=file:///tmp/gpgkey
   ```
 
 ## Installation Steps
