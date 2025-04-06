@@ -13,34 +13,38 @@ GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
   ```
   [local-nvidia]
   name=Local NVIDIA Container Toolkit Repo
-  baseurl=file:///tmp/nvidia-packages
+  baseurl=file:///var/nvidia-packages
   enabled=1
   gpgcheck=1
-  gpgkey=file:///tmp/gpgkey
+  gpgkey=file:///var/nvidia-packages/gpgkey
+  obsolete=0
   ```
 
 ## Installation Steps
 
-1. **Transfer the Repository to the Target Server**:
-   - Copy the entire repository to the RHEL 9.5 server. For example, transfer it to `/opt/nvidia-container-toolkit`.
+1. **Install createrepo tool** (if not already installed):
+   ```
+   sudo dnf install -y createrepo
+   ```
 
-2. **Move Repository Files to the Appropriate Directory**:
-   - On the RHEL server, move the `repo` directory to `/tmp/nvidia-packages`:
-     ```
-     sudo mv /opt/nvidia-container-toolkit/repo /tmp/nvidia-packages
-     ```
-   - Set the correct permissions:
-     ```
-     sudo chmod -R 755 /tmp/nvidia-packages
-     ```
+2. **Transfer the Repository to the Target Server**:
+   - Copy the entire repository to the RHEL 9.5 server. For example, transfer it to `/var/nvidia-packages`.
 
-3. **Configure the Local Repository**:
-   - Move the `nvidia-container-toolkit.repo` file to the Yum repository directory:
+3. **Set the correct permissions**:
      ```
-     sudo mv /opt/nvidia-container-toolkit/nvidia-container-toolkit.repo /etc/yum.repos.d/
+     sudo chmod -R 755 /var/nvidia-packages
      ```
 
-4. **Clean and Rebuild the Yum Cache**:
+4. **Create the local repository metadata**:
+     ```
+     cd /var/nvidia-packages
+     sudo createrepo .
+     ```
+
+5. **Configure the Local Repository**:
+   - Move the `nvidia-container-toolkit.repo` file to the Yum repository directory `/etc/yum.repos.d/`
+
+6. **Clean and Rebuild the Yum Cache**:
    - Clear the existing Yum cache:
      ```
      sudo yum clean all
@@ -50,20 +54,16 @@ GPG key source: https://nvidia.github.io/libnvidia-container/gpgkey
      sudo yum makecache
      ```
 
-5. **Install the NVIDIA Container Toolkit**:
+7. **Install the NVIDIA Container Toolkit**:
    - Install the toolkit using the local repository:
      ```
-     sudo yum install nvidia-container-toolkit
+     sudo dnf install -y nvidia-container-toolkit
      ```
 
-6. **Verify the Installation**:
+8. **Verify the Installation**:
    - After installation, verify that the NVIDIA Container Toolkit is installed correctly:
      ```
      nvidia-container-toolkit --version
-     ```
-   - Additionally, check the status:
-     ```
-     sudo systemctl status nvidia-container-toolkit
      ```
 
 ## Notes
